@@ -1,0 +1,152 @@
+/* Configurações gerais da página */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+  background-color: #f4f9f7; /* Fundo levemente verde/claro */
+  color: #2c3e50;
+  padding: 20px;
+}
+
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* Cabeçalho */
+.header {
+  background: linear-gradient(135deg, #a8e6cf, #76c7c0); /* Verde claro principal */
+  color: #1e3a3a;
+  padding: 25px;
+  border-radius: 12px;
+  text-align: center;
+  margin-bottom: 25px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.header h1 {
+  font-size: 2.2rem;
+  margin-bottom: 5px;
+}
+
+.subtitulo {
+  font-size: 1.1rem;
+  color: #2e5a56;
+  font-weight: 600;
+}
+
+/* Grid de Cards de Resumo */
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.card {
+  background-color: #ffffff;
+  border-top: 4px solid #6c5ce7; /* Detalhe suave */
+  border-radius: 12px; /* Arredondado conforme você pediu */
+  padding: 18px;
+  text-align: center;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06); /* Sombra suave */
+  transition: transform 0.2s ease;
+}
+
+/* Cor secundária (azul suave) aplicamos no card de destaque */
+.card:nth-child(1) {
+  border-top-color: #74b9ff; /* Azul suave */
+}
+
+.card:hover {
+  transform: translateY(-3px);
+}
+
+.card h3 {
+  font-size: 0.9rem;
+  color: #636e72;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.card-valor {
+  font-size: 1.8rem;
+  font-weight: bold;
+  color: #2d3436;
+}
+
+.status-frequencia {
+  display: block;
+  font-size: 0.8rem;
+  color: #27ae60;
+  margin-top: 4px;
+  font-weight: 600;
+}
+
+/* Tabela de Disciplinas */
+.tabela-container {
+  background-color: #ffffff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+}
+
+.tabela-container h2 {
+  margin-bottom: 15px;
+  color: #2d3436;
+}
+
+/* Torna a tabela responsiva no celular */
+.tabela-scroll {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+th, td {
+  padding: 12px 15px;
+  border-bottom: 1px solid #eef2f5;
+}
+
+th {
+  background-color: #eaf7f2; /* Tom de verde bem claro */
+  color: #2d3436;
+  font-weight: 600;
+}
+
+tr:hover {
+  background-color: #f8fbfa;
+}
+
+/* Badge de Situação */
+.status {
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.status-bom {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.status-atencao {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.status-indisponivel {
+  background-color: #e2e3e5;
+  color: #383d41;
+}

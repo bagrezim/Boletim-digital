@@ -27,6 +27,11 @@ let dadosBoletim = [
 // VARIÁVEL DE SESSÃO EM MEMÓRIA PARA O PIN
 let pinSessao = "";
 
+// INSTÂNCIAS DOS GRÁFICOS
+let graficoMedias = null;
+let graficoEvolucao = null;
+let graficoFaltas = null;
+
 // FUNÇÃO PARA NORMALIZAR NOTAS ANTIGAS / LOCAIS
 function normalizarNota(valor) {
   if (valor === null || valor === undefined || valor === "") {
@@ -143,6 +148,9 @@ function renderizarBoletim() {
   document.getElementById("total-faltas").textContent = String(totalFaltasGeral);
   document.getElementById("qtd-bom-desempenho").textContent = String(bomDesempenhoQtd);
   document.getElementById("qtd-atencao").textContent = String(atencaoQtd);
+
+  // Atualizar os gráficos após preencher os cards e tabela
+  atualizarGraficos();
 }
 
 // AUTENTICAÇÃO / ABRIR BOLETIM
@@ -338,93 +346,5 @@ async function salvarAlteracoes() {
     if (!resF1.valida) { elF1.classList.add("campo-invalido"); existeErro = true; }
 
     const resF2 = validarFaltaDigitada(elF2.value);
-    if (!resF2.valida) { elF2.classList.add("campo-invalido"); existeErro = true; }
-
-    const resF3 = validarFaltaDigitada(elF3.value);
-    if (!resF3.valida) { elF3.classList.add("campo-invalido"); existeErro = true; }
-
-    if (!existeErro) {
-      novasDisciplinas.push({
-        disciplina: dadosBoletim[idx].disciplina,
-        tri1: resN1.valor,
-        tri2: resN2.valor,
-        tri3: resN3.valor,
-        faltas: [resF1.valor, resF2.valor, resF3.valor]
-      });
-    }
-  }
-
-  if (existeErro) {
-    msgEdicao.textContent = "Verifique os campos destacados com valores inválidos.";
-    msgEdicao.className = "mensagem-status erro";
-    return;
-  }
-
-  msgEdicao.textContent = "Salvando...";
-  msgEdicao.className = "mensagem-status info";
-
-  try {
-    const resposta = await fetch(`${CONFIG_ALUNO.apiUrl}/api/v1/boletins/salvar`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        turma: CONFIG_ALUNO.turma,
-        numero_chamada: CONFIG_ALUNO.numeroChamada,
-        pin: pinSessao,
-        dados: {
-          disciplinas: novasDisciplinas
-        }
-      })
-    });
-
-    if (!resposta.ok) {
-      msgEdicao.textContent = "Falha ao salvar dados no servidor. Mantenha os campos e tente novamente.";
-      msgEdicao.className = "mensagem-status erro";
-      return;
-    }
-
-    dadosBoletim = novasDisciplinas;
-    renderizarBoletim();
-
-    msgEdicao.textContent = "Dados salvos com sucesso.";
-    msgEdicao.className = "mensagem-status sucesso";
-
-    setTimeout(() => {
-      fecharEdicao();
-    }, 1200);
-
-  } catch (erro) {
-    msgEdicao.textContent = "Falha ao conectar para salvar. Tente novamente.";
-    msgEdicao.className = "mensagem-status erro";
-  }
-}
-
-// INICIALIZAÇÃO DE EVENTOS
-document.addEventListener("DOMContentLoaded", () => {
-  const btnEntrar = document.getElementById("btn-entrar");
-  if (btnEntrar) {
-    btnEntrar.addEventListener("click", fazerLogin);
-  }
-
-  const pinInput = document.getElementById("pin-input");
-  if (pinInput) {
-    pinInput.addEventListener("keyup", (e) => {
-      if (e.key === "Enter") fazerLogin();
-    });
-  }
-
-  const btnAlterar = document.getElementById("btn-alterar-dados");
-  if (btnAlterar) {
-    btnAlterar.addEventListener("click", abrirEdicao);
-  }
-
-  const btnCancelar = document.getElementById("btn-cancelar");
-  if (btnCancelar) {
-    btnCancelar.addEventListener("click", fecharEdicao);
-  }
-
-  const btnSalvar = document.getElementById("btn-salvar");
-  if (btnSalvar) {
-    btnSalvar.addEventListener("click", salvarAlteracoes);
-  }
-});
+    if (!
+      

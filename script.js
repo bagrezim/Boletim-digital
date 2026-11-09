@@ -346,5 +346,320 @@ async function salvarAlteracoes() {
     if (!resF1.valida) { elF1.classList.add("campo-invalido"); existeErro = true; }
 
     const resF2 = validarFaltaDigitada(elF2.value);
-    if (!
-      
+    if (!resF2.valida) { elF2.classList.add("campo-invalido"); existeErro = true; }
+
+    const resF3 = validarFaltaDigitada(elF3.value);
+    if (!resF3.valida) { elF3.classList.add("campo-invalido"); existeErro = true; }
+
+    if (!existeErro) {
+      novasDisciplinas.push({
+        disciplina: dadosBoletim[idx].disciplina,
+        tri1: resN1.valor,
+        tri2: resN2.valor,
+        tri3: resN3.valor,
+        faltas: [resF1.valor, resF2.valor, resF3.valor]
+      });
+    }
+  }
+
+  if (existeErro) {
+    msgEdicao.textContent = "Verifique os campos destacados com valores inválidos.";
+    msgEdicao.className = "mensagem-status erro";
+    return;
+  }
+
+  msgEdicao.textContent = "Salvando...";
+  msgEdicao.className = "mensagem-status info";
+
+  try {
+    const resposta = await fetch(`${CONFIG_ALUNO.apiUrl}/api/v1/boletins/salvar`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        turma: CONFIG_ALUNO.turma,
+        numero_chamada: CONFIG_ALUNO.numeroChamada,
+        pin: pinSessao,
+        dados: {
+          disciplinas: novasDisciplinas
+        }
+      })
+    });
+
+    if (!resposta.ok) {
+      msgEdicao.textContent = "Falha ao salvar dados no servidor. Mantenha os campos e tente novamente.";
+      msgEdicao.className = "mensagem-status erro";
+      return;
+    }
+
+    dadosBoletim = novasDisciplinas;
+    renderizarBoletim();
+
+    msgEdicao.textContent = "Dados salvos com sucesso.";
+    msgEdicao.className = "mensagem-status sucesso";
+
+    setTimeout(() => {
+      fecharEdicao();
+    }, 1200);
+
+  } catch (erro) {
+    msgEdicao.textContent = "Falha ao conectar para salvar. Tente novamente.";
+    msgEdicao.className = "mensagem-status erro";
+  }
+}
+
+// -------------------------------------------------------------
+// CAMADA EXCLUSIVA DOS GRÁFICOS (SOMENTE LEITURA DO ESTADO GLOBAL)
+// -------------------------------------------------------------
+
+function atualizarGraficoMedias() {
+  const ctx = document.getElementById("graficoMediasDisciplinas");
+  if (!ctx) return;
+
+  if (graficoMedias) {
+    graficoMedias.destroy();
+  }
+
+  const labels = [];
+  const data = [];
+
+  dadosBoletim.forEach((item) => {
+    labels.push(item.disciplina);
+
+    const n1 = normalizarNota(item.tri1);
+    const n2 = normalizarNota(item.tri2);
+    const n3 = normalizarNota(item.tri3);
+
+    const notasValidas = [n1, n2, n3].filter((n) => n !== null);
+
+    if (notasValidas.length > 0) {
+      const soma = notasValidas.reduce((a, b) => a + b, 0);
+      const media = soma / notasValidas.length;
+      data.push(parseFloat(media.toFixed(1)));
+    } else {
+      data.push(null);
+    }
+  });
+
+  graficoMedias = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: labels,
+      datasets: [
+        {
+          label: "Média Atual",
+          data: data,
+          backgroundColor: "#76c7c0",
+          borderColor: "#2e5a56",
+          borderWidth: 1,
+          borderRadius: 4
+        }
+      ]
+    },
+    options: {
+      indexAxis: "y",
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: {
+          min: 0,
+          max: 10,
+          ticks: { stepSize: 1 }
+        }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: function (context) {
+              const val = context.raw;
+              if (val === null || val === undefined) return " Sem nota";
+              return ` Média: ${String(val).replace(".", ",")}`;
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+function atualizarGraficoEvolucao() {
+  const ctx = document.getElementById("graficoEvolucaoTrimestres");
+  if (!ctx) return;
+
+  if (graficoEvolucao) {
+    graficoEvolucao.destroy();
+  }
+
+  const trimestres = [
+    { key: "tri1", soma: 0, qtd: 0 },
+    { key: "tri2", soma: 0, qtd: 0 },
+    { key: "tri3", soma: 0, qtd: 0 }
+  ];
+
+  dadosBoletim.forEach((item) => {
+    trimestres.forEach((triObj) => {
+      const norm = normalizarNota(item[triObj.key]);
+      if (norm !== null) {
+        triObj.soma += norm;
+        triObj.qtd++;
+      }
+    });
+  });
+
+  const dataEvolucao = trimestres.map((triObj) => {
+    if (triObj.qtd > 0) {
+      return parseFloat((triObj.soma / triObj.qtd).toFixed(1));
+    }
+    return null;
+  });
+
+  graficoEvolucao = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: ["1º Tri", "2º Tri", "3º Tri"],
+      datasets: [
+        {
+          label: "Média Geral",
+          data: dataEvolucao,
+          borderColor: "#6c5ce7",
+          backgroundColor: "rgba(108, 92, 231, 0.15)",
+          borderWidth: 3,
+          tension: 0.3,
+          fill: true,
+          pointBackgroundColor: "#6c5ce7",
+          pointRadius: 5
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: {
+          min: 0,
+          max: 10,
+          ticks: { stepSize: 1 }
+        }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: function (context) {
+              const val = context.raw;
+              if (val === null || val === undefined) return " Sem dados";
+              return ` Média Geral: ${String(val).replace(".", ",")}`;
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+function atualizarGraficoFaltas() {
+  const ctx = document.getElementById("graficoFaltasTrimestres");
+  if (!ctx) return;
+
+  if (graficoFaltas) {
+    graficoFaltas.destroy();
+  }
+
+  let faltasTri1 = 0;
+  let faltasTri2 = 0;
+  let faltasTri3 = 0;
+
+  dadosBoletim.forEach((item) => {
+    const arr = Array.isArray(item.faltas) ? item.faltas : [0, 0, 0];
+    faltasTri1 += Number(arr[0]) || 0;
+    faltasTri2 += Number(arr[1]) || 0;
+    faltasTri3 += Number(arr[2]) || 0;
+  });
+
+  const totalFaltasAcumuladas = faltasTri1 + faltasTri2 + faltasTri3;
+  const REFERENCIA_RISCO = 350;
+
+  const cardFaltas = document.getElementById("card-grafico-faltas");
+  const estadoFaltasContainer = document.getElementById("estadoFaltas");
+
+  if (estadoFaltasContainer && cardFaltas) {
+    if (totalFaltasAcumuladas >= REFERENCIA_RISCO) {
+      estadoFaltasContainer.innerHTML = `<span class="badge-perigo">Perigo</span>`;
+      cardFaltas.classList.add("card-perigo");
+    } else {
+      estadoFaltasContainer.innerHTML = "";
+      cardFaltas.classList.remove("card-perigo");
+    }
+  }
+
+  graficoFaltas = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: ["1º Tri", "2º Tri", "3º Tri"],
+      datasets: [
+        {
+          label: "Faltas",
+          data: [faltasTri1, faltasTri2, faltasTri3],
+          backgroundColor: ["#74b9ff", "#a8e6cf", "#ff7675"],
+          borderRadius: 6
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: { precision: 0 }
+        }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: function (context) {
+              return ` ${context.raw} faltas`;
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+function atualizarGraficos() {
+  atualizarGraficoMedias();
+  atualizarGraficoEvolucao();
+  atualizarGraficoFaltas();
+}
+
+// INICIALIZAÇÃO DE EVENTOS
+document.addEventListener("DOMContentLoaded", () => {
+  const btnEntrar = document.getElementById("btn-entrar");
+  if (btnEntrar) {
+    btnEntrar.addEventListener("click", fazerLogin);
+  }
+
+  const pinInput = document.getElementById("pin-input");
+  if (pinInput) {
+    pinInput.addEventListener("keyup", (e) => {
+      if (e.key === "Enter") fazerLogin();
+    });
+  }
+
+  const btnAlterar = document.getElementById("btn-alterar-dados");
+  if (btnAlterar) {
+    btnAlterar.addEventListener("click", abrirEdicao);
+  }
+
+  const btnCancelar = document.getElementById("btn-cancelar");
+  if (btnCancelar) {
+    btnCancelar.addEventListener("click", fecharEdicao);
+  }
+
+  const btnSalvar = document.getElementById("btn-salvar");
+  if (btnSalvar) {
+    btnSalvar.addEventListener("click", salvarAlteracoes);
+  }
+});
